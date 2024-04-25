@@ -1,4 +1,4 @@
-import { Controller, Post } from '@nestjs/common';
+import { Body, Controller, HttpCode, Post } from '@nestjs/common';
 import { UserService } from './user.service';
 import { WebResponse } from '../model/web.model';
 import { RegiterUserRequest, UserResponse } from '../model/user.model';
@@ -8,8 +8,9 @@ export class userController {
   constructor(private userService: UserService) {}
 
   @Post()
+  @HttpCode(201)
   async register(
-    request: RegiterUserRequest,
+    @Body() request: RegiterUserRequest,
   ): Promise<WebResponse<UserResponse>> {
     const result = await this.userService.register(request);
     return {

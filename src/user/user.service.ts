@@ -33,6 +33,9 @@ export class UserService {
 
     registerRequest.password = await bcrypt.hash(registerRequest.password, 10);
 
+    // Remove password_confirmation field
+    delete registerRequest.password_confirmation;
+
     const user = await this.prismaService.user.create({
       data: registerRequest,
     });
