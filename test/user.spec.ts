@@ -79,10 +79,9 @@ describe('UserController', () => {
   describe('POST /api/users/login', () => {
     beforeEach(async () => {
       await testService.deleteUser();
+      await testService.createUser();
     });
     it('should be rejected if password is invalid', async () => {
-      await testService.createUser();
-
       const response = await request(app.getHttpServer())
         .post('/api/users/login')
         .send({
@@ -96,7 +95,6 @@ describe('UserController', () => {
     });
 
     it('should be rejected if username not found', async () => {
-      await testService.createUser();
       const response = await request(app.getHttpServer())
         .post('/api/users/login')
         .send({
@@ -110,7 +108,6 @@ describe('UserController', () => {
     });
 
     it('should be able to login', async () => {
-      await testService.createUser();
       const response = await request(app.getHttpServer())
         .post('/api/users/login')
         .send({
