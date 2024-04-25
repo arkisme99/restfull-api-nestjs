@@ -59,7 +59,8 @@ describe('UserController', () => {
       expect(response.body.data.name).toBe('Test Aplikasi');
     });
 
-    it('should be able to register', async () => {
+    it('should be rejected if username already exists', async () => {
+      await testService.createUser();
       const response = await request(app.getHttpServer())
         .post('/api/users')
         .send({
@@ -70,9 +71,8 @@ describe('UserController', () => {
         });
 
       logger.info(response.body);
-      expect(response.status).toBe(201);
-      expect(response.body.data.username).toBe('testAplikasi');
-      expect(response.body.data.name).toBe('Test Aplikasi');
+      expect(response.status).toBe(400);
+      expect(response.body.errors).toBeDefined();
     });
   });
 });

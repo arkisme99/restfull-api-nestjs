@@ -28,7 +28,7 @@ export class UserService {
     });
 
     if (totalUserWithSameUsername != 0) {
-      throw new HttpException('Username already taken', 400);
+      throw new HttpException('Username already exist', 400);
     }
 
     registerRequest.password = await bcrypt.hash(registerRequest.password, 10);
