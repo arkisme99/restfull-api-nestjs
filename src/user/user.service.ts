@@ -10,7 +10,9 @@ import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { PrismaService } from '../common/prisma.service';
 import { UserValidation } from './user.validation';
 import * as bcrypt from 'bcrypt';
-import { v4 as uuid } from 'uuid';
+import { JwtService } from '@nestjs/jwt';
+import { User } from '@prisma/client';
+// import { v4 as uuid } from 'uuid';
 
 @Injectable()
 export class UserService {
@@ -18,6 +20,7 @@ export class UserService {
     private validationService: ValidationService,
     @Inject(WINSTON_MODULE_PROVIDER) private logger: Logger,
     private prismaService: PrismaService,
+    private jwtService: JwtService,
   ) {}
   async register(request: RegiterUserRequest): Promise<UserResponse> {
     this.logger.info(`Register new user ${JSON.stringify(request)}`);
@@ -59,7 +62,7 @@ export class UserService {
       request,
     );
 
-    let user = await this.prismaService.user.findUnique({
+    const user = await this.prismaService.user.findUnique({
       where: {
         username: loginUserRequest.username,
       },
@@ -77,19 +80,30 @@ export class UserService {
       throw new HttpException('Username or Password is invalid', 401);
     }
 
-    user = await this.prismaService.user.update({
+    /* user = await this.prismaService.user.update({
       where: {
         username: loginUserRequest.username,
       },
       data: {
         token: uuid(),
       },
-    });
+    }); */
+
+    //GENERATE JWT TOKEN
+    const payloadJwt = { username: user.username };
 
     return {
       username: user.username,
       name: user.name,
-      token: user.token,
+      token: await this.jwtService.signAsync(payloadJwt),
+    };
+  }
+
+  async get(user: User): Promise<UserResponse> {
+    this.logger.info(`user.service.get ${JSON.stringify(user)}`);
+    return {
+      username: user.username,
+      name: user.name,
     };
   }
 }

@@ -1,9 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../src/common/prisma.service';
 import * as bcrypt from 'bcrypt';
+import { JwtService } from '@nestjs/jwt';
 @Injectable()
 export class TestService {
-  constructor(private prismaService: PrismaService) {}
+  constructor(
+    private prismaService: PrismaService,
+    private jwtService: JwtService,
+  ) {}
 
   async deleteUser() {
     await this.prismaService.user.deleteMany({
@@ -21,5 +25,19 @@ export class TestService {
         name: 'Test Aplikasi',
       },
     });
+  }
+
+  async loginUser() {
+    const user = await this.prismaService.user.findUnique({
+      where: {
+        username: 'testAplikasi',
+      },
+    });
+    const token = await this.jwtService.signAsync({ id: user.username });
+    return {
+      username: user.username,
+      name: user.name,
+      token,
+    };
   }
 }

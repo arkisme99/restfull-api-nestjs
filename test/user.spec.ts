@@ -122,4 +122,35 @@ describe('UserController', () => {
       expect(response.body.data.token).toBeDefined();
     });
   });
+
+  describe('GET /api/users/current', () => {
+    let tokenn = '';
+    beforeEach(async () => {
+      await testService.deleteUser();
+      await testService.createUser();
+      const prosesLogin = await testService.loginUser();
+      tokenn = prosesLogin.token;
+    });
+
+    it('should be rejected if token is invalid', async () => {
+      const response = await request(app.getHttpServer())
+        .get('/api/users/current')
+        .set('Authorization', 'Bearer invalidToken');
+
+      logger.info(response.body);
+      expect(response.status).toBe(401);
+      expect(response.body.errors).toBeDefined();
+    });
+
+    it('should be able to get current users', async () => {
+      const response = await request(app.getHttpServer())
+        .get('/api/users/current')
+        .set('Authorization', `Bearer ${tokenn}`);
+
+      logger.info(response.body);
+      expect(response.status).toBe(200);
+      expect(response.body.data.username).toBe('testAplikasi');
+      expect(response.body.data.name).toBe('Test Aplikasi');
+    });
+  });
 });
