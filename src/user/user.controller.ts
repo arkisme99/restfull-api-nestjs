@@ -48,7 +48,7 @@ export class userController {
   @UseGuards(AuthGuard)
   @Get('/current')
   @HttpCode(200)
-  async get(@Request() req): Promise<WebResponse<UserResponse>> {
+  async get(@Request() req: any): Promise<WebResponse<UserResponse>> {
     const result = await this.userService.get(req.dataUser);
     return {
       messages: 'Get Current User Success',
