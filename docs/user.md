@@ -75,16 +75,15 @@ Endpoint: GET /api/users/current
 
 Headers :
 
-- authorization: token
+- authorization: Bearer token
 
-Response Body (Success, 201):
+Response Body (Success):
 
 ```json
 {
-  "messages": "Detail User",
+  "messages": "Get Current User",
   "data": {
     "username": "userTest",
-
     "name": "User Test Aplikasi"
   }
 }
@@ -104,7 +103,7 @@ Endpoint: PATCH /api/users/current
 
 Headers:
 
-- authorization: token
+- authorization: Bearer token
 
 Request Body :
 
@@ -122,7 +121,6 @@ Response Body (Success, 200):
   "messages": "Update User Success",
   "data": {
     "username": "userTest",
-
     "name": "User Test Aplikasi"
   }
 }
@@ -142,7 +140,7 @@ Endpoint: DELETE /api/users/current
 
 Headers:
 
-- authorization: token
+- authorization: Bearer token
 
 Response Body (Success, 200):
 
