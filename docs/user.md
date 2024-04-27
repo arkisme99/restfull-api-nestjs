@@ -114,7 +114,7 @@ Request Body :
 }
 ```
 
-Response Body (Success, 200):
+Response Body (Success):
 
 ```json
 {
