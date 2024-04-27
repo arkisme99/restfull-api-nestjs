@@ -6,7 +6,7 @@ Endpoint: POST /api/contacts
 
 Headers:
 
-- Authorization : token
+- Authorization : Bearer Bearer token
 
 Request Body :
 
@@ -40,7 +40,7 @@ Endpoint: GET /api/contacts/:id-contact
 
 Headers:
 
-- Authorization : token
+- Authorization : Bearer token
 
 Response Body (Success) :
 
@@ -63,7 +63,7 @@ Endpoint: PUT /api/contacts/:id-contact
 
 Headers:
 
-- Authorization : token
+- Authorization : Bearer token
 
 Request Body :
 
@@ -97,7 +97,7 @@ Endpoint: DELETE /api/contacts/:id-contact
 
 Headers:
 
-- Authorization : token
+- Authorization : Bearer token
 
 Response Body (Success) :
 
@@ -114,7 +114,7 @@ Endpoint: GET /api/contacts
 
 Headers :
 
-- Authorization : token
+- Authorization : Bearer token
 
 Query Params :
 
