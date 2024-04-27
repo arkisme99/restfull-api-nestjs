@@ -142,7 +142,7 @@ Headers:
 
 - authorization: Bearer token
 
-Response Body (Success, 200):
+Response Body (Success):
 
 ```json
 {
