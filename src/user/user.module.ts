@@ -2,17 +2,12 @@ import { Module } from '@nestjs/common';
 import { UserService } from './user.service';
 import { userController } from './user.controller';
 import { JwtModule } from '@nestjs/jwt';
-import { jwtConstants } from '../common/auth.constants';
+import { AccessTokenStrategy } from './strategies/accessToken.strategy';
+import { RefreshTokenStrategy } from './strategies/refreshToken.strategy';
 
 @Module({
-  imports: [
-    JwtModule.register({
-      global: true,
-      secret: jwtConstants.secret,
-      signOptions: { expiresIn: '60s' },
-    }), //inikayanya di app.module.ts
-  ],
-  providers: [UserService],
+  imports: [JwtModule.register({})],
+  providers: [UserService, AccessTokenStrategy, RefreshTokenStrategy],
   controllers: [userController],
 })
 export class UserModule {}

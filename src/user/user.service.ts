@@ -2,6 +2,7 @@ import { HttpException, Inject, Injectable } from '@nestjs/common';
 import {
   LoginUserRequest,
   RegiterUserRequest,
+  UpdateUserRequest,
   UserResponse,
 } from '../model/user.model';
 import { ValidationService } from '../common/validation.service';
@@ -49,6 +50,7 @@ export class UserService {
     });
 
     return {
+      id: user.id,
       username: user.username,
       name: user.name,
     };
@@ -80,30 +82,117 @@ export class UserService {
       throw new HttpException('Username or Password is invalid', 401);
     }
 
-    /* user = await this.prismaService.user.update({
-      where: {
-        username: loginUserRequest.username,
-      },
-      data: {
-        token: uuid(),
-      },
-    }); */
-
     //GENERATE JWT TOKEN
-    const payloadJwt = { username: user.username };
+    const tokens = await this.getTokens(user.id, user.username);
+    await this.updateRefreshToken(user, tokens.refreshToken);
 
     return {
+      id: user.id,
       username: user.username,
       name: user.name,
-      token: await this.jwtService.signAsync(payloadJwt),
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
     };
   }
 
-  async get(user: User): Promise<UserResponse> {
-    this.logger.info(`user.service.get ${JSON.stringify(user)}`);
+  async logout(req: any): Promise<any> {
+    this.logger.info(`user.service.logout ${JSON.stringify(req.user)}`);
+    const user = await this.prismaService.user.update({
+      where: {
+        id: req.user['sub'],
+      },
+      data: {
+        refresh_token: null,
+      },
+    });
+
+    if (!user) {
+      throw new HttpException('Logout Error', 500);
+    }
+    return true;
+  }
+
+  async get(req: any): Promise<UserResponse> {
+    this.logger.info(`user.service.get ${JSON.stringify(req.user)}`);
+
+    const user = await this.prismaService.user.findUniqueOrThrow({
+      where: {
+        id: req.user['sub'],
+      },
+    });
+
     return {
+      id: user.id,
       username: user.username,
       name: user.name,
     };
+  }
+
+  async update(User: User, request: UpdateUserRequest): Promise<UserResponse> {
+    this.logger.info(
+      `user.service.update ${JSON.stringify(User)} request: ${JSON.stringify(request)}`,
+    );
+
+    const updateRequest: UpdateUserRequest = this.validationService.validate(
+      UserValidation.UPDATE,
+      request,
+    );
+
+    if (updateRequest.password) {
+      updateRequest.password = await bcrypt.hash(updateRequest.password, 10);
+    }
+
+    const user = await this.prismaService.user.update({
+      where: {
+        id: User.id,
+      },
+      data: updateRequest,
+    });
+
+    return {
+      id: user.id,
+      username: user.username,
+      name: user.name,
+    };
+  }
+
+  async getTokens(userId: string, username: string) {
+    const [accessToken, refreshToken] = await Promise.all([
+      this.jwtService.signAsync(
+        {
+          sub: userId,
+          username,
+        },
+        {
+          secret: process.env.JWT_ACCESS_SECRET,
+          expiresIn: '15m',
+        },
+      ),
+      this.jwtService.signAsync(
+        {
+          sub: userId,
+          username,
+        },
+        {
+          secret: process.env.JWT_REFRESH_SECRET,
+          expiresIn: '7d',
+        },
+      ),
+    ]);
+    return {
+      accessToken,
+      refreshToken,
+    };
+  }
+
+  hashData(data: string) {
+    return bcrypt.hash(data, 10);
+  }
+
+  async updateRefreshToken(user: User, refreshToken: string) {
+    const hashedRefreshToken = await this.hashData(refreshToken);
+    await this.update(user, {
+      refresh_token: hashedRefreshToken,
+    });
   }
 }

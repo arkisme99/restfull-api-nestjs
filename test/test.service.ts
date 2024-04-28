@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../src/common/prisma.service';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
+import { User } from '@prisma/client';
 @Injectable()
 export class TestService {
   constructor(
@@ -33,11 +34,63 @@ export class TestService {
         username: 'testAplikasi',
       },
     });
-    const token = await this.jwtService.signAsync({ id: user.username });
+    //GENERATE JWT TOKEN
+    const tokens = await this.getTokens(user.id, user.username);
+    await this.updateRefreshToken(user, tokens.refreshToken);
+
     return {
       username: user.username,
       name: user.name,
-      token,
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
     };
+  }
+
+  async getTokens(userId: string, username: string) {
+    const [accessToken, refreshToken] = await Promise.all([
+      this.jwtService.signAsync(
+        {
+          sub: userId,
+          username,
+        },
+        {
+          secret: process.env.JWT_ACCESS_SECRET,
+          expiresIn: '15m',
+        },
+      ),
+      this.jwtService.signAsync(
+        {
+          sub: userId,
+          username,
+        },
+        {
+          secret: process.env.JWT_REFRESH_SECRET,
+          expiresIn: '7d',
+        },
+      ),
+    ]);
+    return {
+      accessToken,
+      refreshToken,
+    };
+  }
+
+  hashData(data: string) {
+    return bcrypt.hash(data, 10);
+  }
+
+  async updateRefreshToken(user: User, refreshToken: string) {
+    const hashedRefreshToken = await this.hashData(refreshToken);
+    await this.prismaService.user.update({
+      where: {
+        id: user.id,
+      },
+      data: {
+        refresh_token: hashedRefreshToken,
+      },
+    });
+    // await this.update(user, {
+    //   refresh_token: hashedRefreshToken,
+    // });
   }
 }

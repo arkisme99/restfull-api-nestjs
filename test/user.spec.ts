@@ -119,7 +119,8 @@ describe('UserController', () => {
       expect(response.status).toBe(200);
       expect(response.body.data.username).toBe('testAplikasi');
       expect(response.body.data.name).toBe('Test Aplikasi');
-      expect(response.body.data.token).toBeDefined();
+      expect(response.body.data.accessToken).toBeDefined();
+      expect(response.body.data.refreshToken).toBeDefined();
     });
   });
 
@@ -129,7 +130,7 @@ describe('UserController', () => {
       await testService.deleteUser();
       await testService.createUser();
       const prosesLogin = await testService.loginUser();
-      tokenn = prosesLogin.token;
+      tokenn = prosesLogin.accessToken;
     });
 
     it('should be rejected if token is invalid', async () => {
@@ -151,6 +152,36 @@ describe('UserController', () => {
       expect(response.status).toBe(200);
       expect(response.body.data.username).toBe('testAplikasi');
       expect(response.body.data.name).toBe('Test Aplikasi');
+    });
+  });
+
+  describe('POST /api/users/logout', () => {
+    let tokenn = '';
+    beforeEach(async () => {
+      await testService.deleteUser();
+      await testService.createUser();
+      const prosesLogin = await testService.loginUser();
+      tokenn = prosesLogin.accessToken;
+    });
+
+    it('should be rejected if token is invalid', async () => {
+      const response = await request(app.getHttpServer())
+        .post('/api/users/logout')
+        .set('Authorization', 'Bearer invalidToken');
+
+      logger.info(response.body);
+      expect(response.status).toBe(401);
+      expect(response.body.errors).toBeDefined();
+    });
+
+    it('should be able to logout', async () => {
+      const response = await request(app.getHttpServer())
+        .post('/api/users/logout')
+        .set('Authorization', `Bearer ${tokenn}`);
+
+      logger.info(response.body);
+      expect(response.status).toBe(200);
+      expect(response.body.data).toBe(true);
     });
   });
 });
