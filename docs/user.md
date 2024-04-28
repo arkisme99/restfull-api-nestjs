@@ -21,6 +21,7 @@ Response Body (Success, 201):
 {
   "messages": "Register User Success",
   "data": {
+    "id": "id",
     "username": "userTest",
     "name": "User Test Aplikasi"
   }
@@ -54,18 +55,12 @@ Response Body (Success):
 {
   "messages": "Login Success",
   "data": {
+    "id": "id User",
     "username": "userTest",
     "name": "User Test Aplikasi",
-    "token": "session_id_generated"
+    "accessToken": "token",
+    "refreshToken": "token"
   }
-}
-```
-
-Response Body (Failed):
-
-```json
-{
-  "errors": "Username or password is wrong"
 }
 ```
 
@@ -83,17 +78,10 @@ Response Body (Success):
 {
   "messages": "Get Current User",
   "data": {
+    "id": "id User",
     "username": "userTest",
     "name": "User Test Aplikasi"
   }
-}
-```
-
-Response Body (Failed):
-
-```json
-{
-  "errors": "Unauthorized"
 }
 ```
 
@@ -126,17 +114,32 @@ Response Body (Success):
 }
 ```
 
-Response Body (Failed):
+## Refresh User
+
+Endpoint: POST /api/users/refresh
+
+Headers:
+
+- authorization: Bearer token
+
+Response Body (Success):
 
 ```json
 {
-  "errors": ""
+  "messages": "Refresh Success",
+  "data": {
+    "id": "id User",
+    "username": "userTest",
+    "name": "User Test Aplikasi",
+    "accessToken": "token",
+    "refreshToken": "token"
+  }
 }
 ```
 
 ## Logout User
 
-Endpoint: DELETE /api/users/current
+Endpoint: POST /api/users/logout
 
 Headers:
 
@@ -148,13 +151,5 @@ Response Body (Success):
 {
   "messages": "Logout User Success",
   "data": true
-}
-```
-
-Response Body (Failed):
-
-```json
-{
-  "errors": ""
 }
 ```
