@@ -16,8 +16,7 @@ import {
   UserResponse,
 } from '../model/user.model';
 import { AccessTokenGuard } from '../common/guards/accessToken.guard';
-// import { AuthGuard } from '../common/auth.guard';
-// import { User } from '@prisma/client';
+import { RefreshTokenGuard } from '../common/guards/refreshToken.guard';
 
 @Controller('/api/users')
 export class userController {
@@ -64,6 +63,17 @@ export class userController {
     const result = await this.userService.logout(req);
     return {
       messages: 'Logout Success',
+      data: result,
+    };
+  }
+
+  @UseGuards(RefreshTokenGuard)
+  @Post('/refresh')
+  @HttpCode(200)
+  async refresh(@Request() req: any): Promise<WebResponse<UserResponse>> {
+    const result = await this.userService.refreshTokens(req);
+    return {
+      messages: 'Refresh Token Success',
       data: result,
     };
   }

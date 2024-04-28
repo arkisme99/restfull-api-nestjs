@@ -1,4 +1,9 @@
-import { HttpException, Inject, Injectable } from '@nestjs/common';
+import {
+  ForbiddenException,
+  HttpException,
+  Inject,
+  Injectable,
+} from '@nestjs/common';
 import {
   LoginUserRequest,
   RegiterUserRequest,
@@ -153,6 +158,36 @@ export class UserService {
       id: user.id,
       username: user.username,
       name: user.name,
+    };
+  }
+
+  async refreshTokens(req: any): Promise<UserResponse> {
+    this.logger.info(`user.service.refreshTokens ${JSON.stringify(req.user)}`);
+
+    const user = await this.prismaService.user.findUnique({
+      where: {
+        id: req.user['sub'],
+      },
+    });
+
+    if (!user || !user.refresh_token)
+      throw new ForbiddenException('Access Denied');
+
+    const refreshTokenMatches = await bcrypt.compare(
+      req.user['refreshToken'],
+      user.refresh_token,
+    );
+
+    if (!refreshTokenMatches) throw new ForbiddenException('Access Denied');
+
+    const tokens = await this.getTokens(user.id, user.username);
+    await this.updateRefreshToken(user, tokens.refreshToken);
+    return {
+      id: user.id,
+      username: user.username,
+      name: user.name,
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
     };
   }
 
