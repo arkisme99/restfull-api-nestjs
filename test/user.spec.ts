@@ -155,6 +155,68 @@ describe('UserController', () => {
     });
   });
 
+  describe('PATCH /api/users/current', () => {
+    let tokenn = '';
+    beforeEach(async () => {
+      await testService.deleteUser();
+      await testService.createUser();
+      const prosesLogin = await testService.loginUser();
+      tokenn = prosesLogin.accessToken;
+    });
+
+    it('should be rejected if token is invalid', async () => {
+      const response = await request(app.getHttpServer())
+        .patch('/api/users/current')
+        .set('Authorization', 'Bearer invalidToken');
+
+      logger.info(response.body);
+      expect(response.status).toBe(401);
+      expect(response.body.errors).toBeDefined();
+    });
+
+    it('should be able to update current users only name', async () => {
+      const response = await request(app.getHttpServer())
+        .patch('/api/users/current')
+        .set('Authorization', `Bearer ${tokenn}`)
+        .send({
+          name: 'Test Aplikasi Baru',
+        });
+
+      logger.info(response.body);
+      expect(response.status).toBe(200);
+      expect(response.body.data.username).toBe('testAplikasi');
+      expect(response.body.data.name).toBe('Test Aplikasi Baru');
+    });
+
+    it('should be able to update current users only password', async () => {
+      let response = await request(app.getHttpServer())
+        .patch('/api/users/current')
+        .set('Authorization', `Bearer ${tokenn}`)
+        .send({
+          password: 'passBaru',
+        });
+
+      logger.info(response.body);
+      expect(response.status).toBe(200);
+      expect(response.body.data.username).toBe('testAplikasi');
+
+      //login pakai password baru
+      response = await request(app.getHttpServer())
+        .post('/api/users/login')
+        .send({
+          username: 'testAplikasi',
+          password: 'passBaru',
+        });
+
+      logger.info(response.body);
+      expect(response.status).toBe(200);
+      expect(response.body.data.username).toBe('testAplikasi');
+      expect(response.body.data.name).toBe('Test Aplikasi');
+      expect(response.body.data.accessToken).toBeDefined();
+      expect(response.body.data.refreshToken).toBeDefined();
+    });
+  });
+
   describe('POST /api/users/logout', () => {
     let tokenn = '';
     beforeEach(async () => {

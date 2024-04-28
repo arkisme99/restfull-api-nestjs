@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   HttpCode,
+  Patch,
   Post,
   Request,
   UseGuards,
@@ -13,6 +14,7 @@ import {
   LoginUserRequest,
   LogoutResponse,
   RegiterUserRequest,
+  UpdateUserRequest,
   UserResponse,
 } from '../model/user.model';
 import { AccessTokenGuard } from '../common/guards/accessToken.guard';
@@ -52,6 +54,20 @@ export class userController {
     const result = await this.userService.get(req);
     return {
       messages: 'Get Current User Success',
+      data: result,
+    };
+  }
+
+  @UseGuards(AccessTokenGuard)
+  @Patch('/current')
+  @HttpCode(200)
+  async update(
+    @Request() req: any,
+    @Body() request: UpdateUserRequest,
+  ): Promise<WebResponse<UserResponse>> {
+    const result = await this.userService.update(req.user['sub'], request);
+    return {
+      messages: 'Update Current User Success',
       data: result,
     };
   }

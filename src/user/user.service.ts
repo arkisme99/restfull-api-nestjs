@@ -17,8 +17,6 @@ import { PrismaService } from '../common/prisma.service';
 import { UserValidation } from './user.validation';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
-import { User } from '@prisma/client';
-// import { v4 as uuid } from 'uuid';
 
 @Injectable()
 export class UserService {
@@ -29,7 +27,6 @@ export class UserService {
     private jwtService: JwtService,
   ) {}
   async register(request: RegiterUserRequest): Promise<UserResponse> {
-    this.logger.info(`Register new user ${JSON.stringify(request)}`);
     const registerRequest: RegiterUserRequest = this.validationService.validate(
       UserValidation.REGISTER,
       request,
@@ -50,6 +47,10 @@ export class UserService {
     // Remove password_confirmation field
     delete registerRequest.password_confirmation;
 
+    this.logger.info(
+      `user.service.register ${JSON.stringify(registerRequest)}`,
+    );
+
     const user = await this.prismaService.user.create({
       data: registerRequest,
     });
@@ -62,8 +63,7 @@ export class UserService {
   }
 
   async login(request: LoginUserRequest): Promise<UserResponse> {
-    this.logger.info(`user.service.login ${JSON.stringify(request)}`);
-
+    this.logger.info(`user.service.login ${JSON.stringify(request.username)}`);
     const loginUserRequest: LoginUserRequest = this.validationService.validate(
       UserValidation.LOGIN,
       request,
@@ -89,7 +89,7 @@ export class UserService {
 
     //GENERATE JWT TOKEN
     const tokens = await this.getTokens(user.id, user.username);
-    await this.updateRefreshToken(user, tokens.refreshToken);
+    await this.updateRefreshToken(user.id, tokens.refreshToken);
 
     return {
       id: user.id,
@@ -133,11 +133,10 @@ export class UserService {
     };
   }
 
-  async update(User: User, request: UpdateUserRequest): Promise<UserResponse> {
-    this.logger.info(
-      `user.service.update ${JSON.stringify(User)} request: ${JSON.stringify(request)}`,
-    );
-
+  async update(
+    userId: string,
+    request: UpdateUserRequest,
+  ): Promise<UserResponse> {
     const updateRequest: UpdateUserRequest = this.validationService.validate(
       UserValidation.UPDATE,
       request,
@@ -147,9 +146,13 @@ export class UserService {
       updateRequest.password = await bcrypt.hash(updateRequest.password, 10);
     }
 
+    this.logger.info(
+      `user.service.update ${JSON.stringify(userId)} request: ${JSON.stringify(updateRequest)}`,
+    );
+
     const user = await this.prismaService.user.update({
       where: {
-        id: User.id,
+        id: userId,
       },
       data: updateRequest,
     });
@@ -181,7 +184,7 @@ export class UserService {
     if (!refreshTokenMatches) throw new ForbiddenException('Access Denied');
 
     const tokens = await this.getTokens(user.id, user.username);
-    await this.updateRefreshToken(user, tokens.refreshToken);
+    await this.updateRefreshToken(user.id, tokens.refreshToken);
     return {
       id: user.id,
       username: user.username,
@@ -224,9 +227,9 @@ export class UserService {
     return bcrypt.hash(data, 10);
   }
 
-  async updateRefreshToken(user: User, refreshToken: string) {
+  async updateRefreshToken(userId: string, refreshToken: string) {
     const hashedRefreshToken = await this.hashData(refreshToken);
-    await this.update(user, {
+    await this.update(userId, {
       refresh_token: hashedRefreshToken,
     });
   }

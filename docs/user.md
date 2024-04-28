@@ -97,8 +97,8 @@ Request Body :
 
 ```json
 {
-  "password": "rahasia", //optional if you want to change
-  "name": "User Test Aplikasi" //optional if you want to change
+  "name": "User Test Aplikasi", //optional if you want to change
+  "password": "rahasia" //optional if you want to change
 }
 ```
 
